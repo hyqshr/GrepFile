@@ -116,7 +116,7 @@ export async function sendQuery(context: vscode.ExtensionContext, messageContent
                 messages: [
                     {
                         id: "some-id-1",
-                        content: messageContent,
+                        content: "List all files that is about " + messageContent,
                         role: "user"
                     }
                 ],
