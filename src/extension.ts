@@ -1,16 +1,35 @@
+// extension.ts
 import * as vscode from 'vscode';
-import * as https from 'https';
+import { FileExplorerProvider, FileItem } from './views/fileExplorer';
 
 export function activate(context: vscode.ExtensionContext) {
-    let disposable = vscode.commands.registerCommand('extension.exampleCommand', async () => {
-        await getUserInput(); 
+    // Register command to start search and show results in tree view
+    let initSearchCommand = vscode.commands.registerCommand('fileExplorer.initSearch', async () => {
+        const userInput = await getUserInput();
+        if (userInput) {
+            const files = await searchFilesByName(userInput);
+            console.log(files);
+            if (files.length > 0) {
+                const fileExplorerProvider = new FileExplorerProvider(files);
+                vscode.window.registerTreeDataProvider('fileList', fileExplorerProvider);
+                // Focus the tree view
+                vscode.commands.executeCommand('workbench.view.extension.fileExplorer');
+            } else {
+                vscode.window.showInformationMessage('No files found with that name.');
+            }
+        }
     });
 
-    context.subscriptions.push(disposable);
+	let openFileCommand = vscode.commands.registerCommand('fileExplorer.openFile', (filePath: string) => {
+        const uri = vscode.Uri.file(filePath);
+        vscode.window.showTextDocument(uri);
+    });
+
+    context.subscriptions.push(initSearchCommand, openFileCommand);
 }
 
 
-async function getUserInput() {
+async function getUserInput(): Promise<string | undefined> {
     const result = await vscode.window.showInputBox({
         placeHolder: 'Provide some information about the file you are looking for.',
         prompt: 'Enter here',
@@ -18,35 +37,10 @@ async function getUserInput() {
             return text.trim().length === 0 ? 'Please provide your input.' : null;
         }
     });
-
-    if (result !== undefined) {
-        const files = await searchFilesByName(result);
-        if (files.length > 0) {
-            showFilePicker(files);
-        } else {
-            vscode.window.showInformationMessage('No files found with that name.');
-        }
-    } else {
-        vscode.window.showInformationMessage('No input received.');
-    }
+    return result;
 }
 
 async function searchFilesByName(fileName: string): Promise<string[]> {
-    // Simulating file search, replace this with actual search logic
     return vscode.workspace.findFiles(`**/*${fileName}*`, '**/node_modules/**', 10)
         .then(files => files.map(file => file.fsPath));
-}
-
-async function showFilePicker(files: string[]): Promise<void> {
-    const picked = await vscode.window.showQuickPick(files, {
-        placeHolder: 'Select a file to open'
-    });
-    if (picked) {
-        openFile(picked);
-    }
-}
-
-function openFile(path: string): void {
-    const uri = vscode.Uri.file(path);
-    vscode.window.showTextDocument(uri);
 }
