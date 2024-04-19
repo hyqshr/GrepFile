@@ -5,7 +5,7 @@ import { filterFiles, sendQuery, sendRepositoryData } from './util/client';
 
 export function activate(context: vscode.ExtensionContext) {
     const secrets: vscode.SecretStorage = context.secrets;
-    let disposable = vscode.commands.registerCommand('fileExplorer.askToken', async () => {
+    let disposable = vscode.commands.registerCommand('GrepFile.askToken', async () => {
     // Get or ask for Greptile API token
     let greptileToken = await secrets.get("greptile_api_key");
         greptileToken = await vscode.window.showInputBox({
@@ -17,9 +17,8 @@ export function activate(context: vscode.ExtensionContext) {
 
         if (greptileToken) {
             await secrets.store('greptile_api_key', greptileToken);
-            console.log("$$$$$ Greptile API token stored");
+            console.log("Greptile API token stored");
         } else {
-            console.log("No Greptile API token entered");
             vscode.window.showInformationMessage('Greptile API token is required!');
             return;  // Exit if no token provided
         }
@@ -35,9 +34,8 @@ export function activate(context: vscode.ExtensionContext) {
 
         if (githubToken) {
             await secrets.store('github_token', githubToken);
-            console.log("$$$$$ GitHub token stored");
+            console.log("GitHub token stored");
         } else {
-            console.log("No GitHub token entered");
             vscode.window.showInformationMessage('GitHub token is required!');
         }
 
@@ -46,17 +44,17 @@ export function activate(context: vscode.ExtensionContext) {
     });
 	
     // Register command to start search and show results in tree view
-    let initSearchCommand = vscode.commands.registerCommand('fileExplorer.initSearch', async () => {
+    let initSearchCommand = vscode.commands.registerCommand('GrepFile.initSearch', async () => {
         const userInput = await getUserInput();
         if (userInput) {
             const sources = await sendQuery(context, userInput);
-            // const filepaths = await filterFiles(sources)
-            // console.log("filepaths: ", filepaths);
+            const filepaths = await filterFiles(sources)
+            console.log("filepaths: ", filepaths);
 
-            if (sources && sources.length > 0) {
-                console.log("filep!!aths: ", sources);
+            if (filepaths && filepaths.length > 0) {
+                console.log("filepaths: ", filepaths);
 
-                const fileExplorerProvider = new FileExplorerProvider(sources);
+                const fileExplorerProvider = new FileExplorerProvider(filepaths);
                 vscode.window.registerTreeDataProvider('fileList', fileExplorerProvider);
                 // Focus the tree view
                 vscode.commands.executeCommand('workbench.view.extension.fileExplorer');
@@ -66,7 +64,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    let openFileCommand = vscode.commands.registerCommand('fileExplorer.openFile', async (fileUri: vscode.Uri) => {
+    let openFileCommand = vscode.commands.registerCommand('GrepFile.openFile', async (fileUri: vscode.Uri) => {
         try {
             // Use the built-in command to open the file
             await vscode.commands.executeCommand('vscode.open', fileUri);
@@ -76,7 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
     
-    context.subscriptions.push(vscode.commands.registerCommand('fileExplorer.sendRepoData', () => {
+    context.subscriptions.push(vscode.commands.registerCommand('GrepFile.sendRepoData', () => {
         sendRepositoryData(context);
     }));
 
@@ -86,7 +84,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 async function getUserInput(): Promise<string | undefined> {
     const result = await vscode.window.showInputBox({
-        placeHolder: 'Provide some information about the file you are looking for.',
+        placeHolder: 'GrepFile: Provide some information about the file you are looking for.',
         prompt: 'Enter here',
         validateInput: text => {
             return text.trim().length === 0 ? 'Please provide your input.' : null;

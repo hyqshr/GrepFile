@@ -1,6 +1,10 @@
-export interface ApiResponse {
+export interface QueryResponse {
     message: string;
     sources: Source[];
+}
+
+export interface IndexResponse {
+    message: string;
 }
 
 interface Source {

@@ -9,41 +9,29 @@ export class FileExplorerProvider implements vscode.TreeDataProvider<FileItem> {
         return element;
     }
 
-    async getChildren(element?: FileItem): Promise<FileItem[]> {
-        if (element) {
-            // If the element is a folder, read its contents
-            if (element.isFolder) {
-                console.log(element, "isFolder")
-
-                const children = await vscode.workspace.fs.readDirectory(element.resourceUri || vscode.Uri.file(''));
-                return children.map(([name, type]) => new FileItem(path.join(element.filePath, name), type === vscode.FileType.Directory));
-            } else {
-                return [];
-            }
-        } else {
-            console.log(element, "else")
-            return this.files.map(file => new FileItem(file, false)); // Assume root items are folders for initialization
+    getChildren(element?: FileItem): Thenable<FileItem[]> {
+        if (!element) {
+            return Promise.resolve(this.files.map(file => new FileItem(file)));
         }
+        return Promise.resolve([]);
     }
 }
 
 export class FileItem extends vscode.TreeItem {
-    constructor(public readonly filePath: string, public readonly isFolder: boolean) {
-        super(filePath, isFolder ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
+    constructor(public readonly filePath: string) {
+        super(filePath, vscode.TreeItemCollapsibleState.None);
 
         const rootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
         const fullFilePath = rootPath ? path.join(rootPath, filePath) : filePath;
 
         this.resourceUri = vscode.Uri.file(fullFilePath);
-        this.label = path.basename(filePath);
-        this.tooltip = `${this.resourceUri.fsPath}`;
+        this.label = path.basename(filePath); // Shows only the file name
+        this.tooltip = `${this.resourceUri.fsPath} - Additional info here`;
 
-        if (!isFolder) {
-            this.command = {
-                title: "Open File",
-                command: "fileExplorer.openFile",
-                arguments: [this.resourceUri]
-            };
-        }
+        this.command = {
+            title: "Open File",
+            command: "GrepFile.openFile",
+            arguments: [this.resourceUri]
+        };
     }
 }

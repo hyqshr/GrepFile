@@ -1,6 +1,6 @@
 {
-  "name": "filegraber",
-  "displayName": "filegraber",
+  "name": "grepfile",
+  "displayName": "GrepFile",
   "description": "VSCode file finder powered by Greptile. Never get lost in large codebase",
   "version": "0.0.1",
   "engines": {
@@ -10,27 +10,27 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:fileExplorer.initSearch"
+    "onCommand:GrepFile.initSearch"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "fileExplorer.initSearch",
-        "title": "Search keyword"
+        "command": "GrepFile.initSearch",
+        "title": "GrepFile: Find file"
       },
       {
-        "command": "fileExplorer.askToken",
-        "title": "Filegraber: Enter Github Token and Greptile API Key"
+        "command": "GrepFile.askToken",
+        "title": "GrepFile: Enter Github Token and Greptile API Key"
       },
       {
-        "command": "fileExplorer.sendRepoData",
+        "command": "GrepFile.sendRepoData",
         "title": "GrepFile: Send Repository Data"
       }
     ],
     "keybindings": [
       {
-        "command": "fileExplorer.initSearch",
+        "command": "GrepFile.initSearch",
         "key": "shift+f",
         "mac": "shift+f"
       }
@@ -39,7 +39,7 @@
       "activitybar": [
         {
           "id": "fileExplorer",
-          "title": "File Explorer",
+          "title": "GrepFile",
           "icon": "images/app-bar-logo.png"
         }
       ]

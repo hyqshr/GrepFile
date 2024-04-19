@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import axios from 'axios';
 import path from 'path';
-import { ApiResponse } from './types';
+import { QueryResponse } from './types';
 
 export async function getRepoInfo() {
 
@@ -36,7 +36,6 @@ export async function getRepoInfo() {
 export async function filterFiles(sources: string[]) {
     const fileSources = [];
 
-    // Assuming there's at least one workspace folder open
     if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
         console.error("No workspace folders are open.");
         return [];
@@ -46,20 +45,21 @@ export async function filterFiles(sources: string[]) {
 
     for (const source of sources) {
         try {
-            // Resolve relative paths against the workspace root
-            const fullSourcePath = path.resolve(workspaceRoot, source);
+            // Make sure the path does not start with a slash for proper resolution
+            const normalizedSource = source.startsWith('/') ? source.slice(1) : source;
+            const fullSourcePath = path.join(workspaceRoot, normalizedSource);
             const uri = vscode.Uri.file(fullSourcePath);
             const stat = await vscode.workspace.fs.stat(uri);
 
             if (stat.type === vscode.FileType.File) {
-                console.log("uri!!!", source);
-                fileSources.push(source);
+                console.log("File exists:", uri.fsPath);
+                fileSources.push(uri.fsPath); // Push the absolute path for clarity
             }
         } catch (error) {
             console.error(`Error accessing ${source}: ${error}`);
         }
     }
-    console.log("fileSources@@@", fileSources);
+    console.log("Valid file sources:", fileSources);
     return fileSources;
 }
 
@@ -129,7 +129,7 @@ export async function sendQuery(context: vscode.ExtensionContext, messageContent
                 sessionId: "test-session-id"
             };
 
-            const response = await axios.post<ApiResponse>('https://api.greptile.com/v2/query', payload, {
+            const response = await axios.post<QueryResponse>('https://api.greptile.com/v2/query', payload, {
                 headers: {
                     'Authorization': `Bearer ${greptileToken}`,
                     'X-Github-Token': githubToken,
