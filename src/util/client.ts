@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import axios from 'axios';
+import path from 'path';
+import { ApiResponse } from './types';
 
 export async function getRepoInfo() {
 
@@ -91,42 +93,43 @@ export async function sendRepositoryData(context: vscode.ExtensionContext) {
     }
 }
 
-export async function sendQuery(context: vscode.ExtensionContext, messageContent: string) {
+export async function sendQuery(context: vscode.ExtensionContext, messageContent: string): Promise<string[]> {
     try {
         const greptileToken = await context.secrets.get("greptile_api_key");
         const githubToken = await context.secrets.get("github_token");
-        const userRepo = await getRepoInfo(); // Ensure getRepoInfo is implemented correctly to fetch the repo info
 
         if (!greptileToken || !githubToken) {
             vscode.window.showErrorMessage("API tokens are missing.");
-            return;
+            return [];
         }
 
-        const payload = {
-            messages: [
-                {
-                    id: "some-id-1",
-                    content: "List all files that is about " + messageContent,
-                    role: "user"
-                }
-            ],
-            repositories: [
-                {
-                    repository: userRepo,
-                    branch: "main"
-                }
-            ],
-            sessionId: "test-session-id"
-        };
-
-        // Display a loading message while sending the data
-        const result = await vscode.window.withProgress({
+        return await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
-            title: "Greptile: Sending query...",
-            cancellable: false
+            title: "GrepFile: Sending query...",
+            cancellable: true  // Optionally make this operation cancellable
         }, async (progress, token) => {
-            // Make the HTTP request
-            const response = await axios.post('https://api.greptile.com/v2/query', payload, {
+            token.onCancellationRequested(() => {
+                console.log("User canceled the long running operation");
+            });
+
+            const payload = {
+                messages: [
+                    {
+                        id: "some-id-1",
+                        content: messageContent,
+                        role: "user"
+                    }
+                ],
+                repositories: [
+                    {
+                        repository: await getRepoInfo(),  // Ensure this function is non-blocking and efficient
+                        branch: "main"
+                    }
+                ],
+                sessionId: "test-session-id"
+            };
+
+            const response = await axios.post<ApiResponse>('https://api.greptile.com/v2/query', payload, {
                 headers: {
                     'Authorization': `Bearer ${greptileToken}`,
                     'X-Github-Token': githubToken,
@@ -136,17 +139,15 @@ export async function sendQuery(context: vscode.ExtensionContext, messageContent
 
             if (response.status === 200) {
                 vscode.window.showInformationMessage(response.data.message);
-                const paths = response.data.sources.map(source => source.filepath)
-                return paths;
+                return response.data.sources.map(source => source.filepath);
             } else {
-                throw new Error(response.statusText);  // Handle non-200 responses
+                vscode.window.showErrorMessage('Failed to get a successful response from the server');
+                return [];
             }
         });
-
-        // Optionally process the result here if needed
-        return result;
     } catch (error) {
         console.error("Failed to send query:", error);
         vscode.window.showErrorMessage("Failed to send query.");
+        return [];
     }
 }

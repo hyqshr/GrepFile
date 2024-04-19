@@ -4,8 +4,6 @@ import { FileExplorerProvider, FileItem } from './views/fileExplorer';
 import { filterFiles, sendQuery, sendRepositoryData } from './util/client';
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log(vscode.workspace.workspaceFolders[0].uri)
-    console.log(vscode.workspace.name)
     const secrets: vscode.SecretStorage = context.secrets;
     let disposable = vscode.commands.registerCommand('fileExplorer.askToken', async () => {
     // Get or ask for Greptile API token
@@ -19,7 +17,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         if (greptileToken) {
             await secrets.store('greptile_api_key', greptileToken);
-            console.log("$$$ Greptile API token stored");
+            console.log("$$$$$ Greptile API token stored");
         } else {
             console.log("No Greptile API token entered");
             vscode.window.showInformationMessage('Greptile API token is required!');
@@ -37,7 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         if (githubToken) {
             await secrets.store('github_token', githubToken);
-            console.log("$$$ GitHub token stored");
+            console.log("$$$$$ GitHub token stored");
         } else {
             console.log("No GitHub token entered");
             vscode.window.showInformationMessage('GitHub token is required!');
@@ -52,11 +50,13 @@ export function activate(context: vscode.ExtensionContext) {
         const userInput = await getUserInput();
         if (userInput) {
             const sources = await sendQuery(context, userInput);
-            const filepaths = await filterFiles(sources)
-            console.log("filepaths: ", filepaths);
+            // const filepaths = await filterFiles(sources)
+            // console.log("filepaths: ", filepaths);
 
             if (sources && sources.length > 0) {
-                const fileExplorerProvider = new FileExplorerProvider(filepaths);
+                console.log("filep!!aths: ", sources);
+
+                const fileExplorerProvider = new FileExplorerProvider(sources);
                 vscode.window.registerTreeDataProvider('fileList', fileExplorerProvider);
                 // Focus the tree view
                 vscode.commands.executeCommand('workbench.view.extension.fileExplorer');
@@ -67,7 +67,13 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     let openFileCommand = vscode.commands.registerCommand('fileExplorer.openFile', async (fileUri: vscode.Uri) => {
-        await vscode.window.showTextDocument(fileUri);
+        try {
+            // Use the built-in command to open the file
+            await vscode.commands.executeCommand('vscode.open', fileUri);
+        } catch (error) {
+            console.error('Failed to open file:', error);
+            vscode.window.showErrorMessage(`Failed to open file: ${error}`);
+        }
     });
     
     context.subscriptions.push(vscode.commands.registerCommand('fileExplorer.sendRepoData', () => {
