@@ -25,7 +25,7 @@
       },
       {
         "command": "fileExplorer.sendRepoData",
-        "title": "Send Repository Data"
+        "title": "GrepFile: Send Repository Data"
       }
     ],
     "keybindings": [

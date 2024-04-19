@@ -19,26 +19,19 @@ export class FileExplorerProvider implements vscode.TreeDataProvider<FileItem> {
 
 export class FileItem extends vscode.TreeItem {
     constructor(public readonly filePath: string) {
-        super(vscode.Uri.file(filePath), vscode.TreeItemCollapsibleState.None);
+        super(filePath, vscode.TreeItemCollapsibleState.None);
 
-        // Safely check if resourceUri is defined
-        if (this.resourceUri) {
-            const workspaceFolder = vscode.workspace.getWorkspaceFolder(this.resourceUri);
-            const relativePath = workspaceFolder
-                ? path.relative(workspaceFolder.uri.fsPath, this.resourceUri.fsPath)
-                : this.resourceUri.fsPath;
+        const rootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
+        const fullFilePath = rootPath ? path.join(rootPath, filePath) : filePath;
 
-            this.label = relativePath;
-            this.tooltip = `${relativePath} - Additional info here`;
-        } else {
-            this.label = "Undefined Path";
-            this.tooltip = "The file path is not defined";
-        }
-        
+        this.resourceUri = vscode.Uri.file(fullFilePath);
+        this.label = path.basename(filePath); // Shows only the file name
+        this.tooltip = `${this.resourceUri.fsPath} - Additional info here`;
+
         this.command = {
             title: "Open File",
             command: "fileExplorer.openFile",
-            arguments: [this.filePath]
+            arguments: [this.resourceUri]
         };
     }
 }

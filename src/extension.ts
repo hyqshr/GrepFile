@@ -1,9 +1,11 @@
 // extension.ts
 import * as vscode from 'vscode';
 import { FileExplorerProvider, FileItem } from './views/fileExplorer';
-import sendRepositoryData from './util/client';
+import { filterFiles, sendQuery, sendRepositoryData } from './util/client';
 
 export function activate(context: vscode.ExtensionContext) {
+    console.log(vscode.workspace.workspaceFolders[0].uri)
+    console.log(vscode.workspace.name)
     const secrets: vscode.SecretStorage = context.secrets;
     let disposable = vscode.commands.registerCommand('fileExplorer.askToken', async () => {
     // Get or ask for Greptile API token
@@ -49,22 +51,23 @@ export function activate(context: vscode.ExtensionContext) {
     let initSearchCommand = vscode.commands.registerCommand('fileExplorer.initSearch', async () => {
         const userInput = await getUserInput();
         if (userInput) {
-            const files = await searchFilesByName(userInput);
-            console.log(files);
-            if (files.length > 0) {
-                const fileExplorerProvider = new FileExplorerProvider(files);
+            const sources = await sendQuery(context, userInput);
+            const filepaths = await filterFiles(sources)
+            console.log("filepaths: ", filepaths);
+
+            if (sources && sources.length > 0) {
+                const fileExplorerProvider = new FileExplorerProvider(filepaths);
                 vscode.window.registerTreeDataProvider('fileList', fileExplorerProvider);
                 // Focus the tree view
                 vscode.commands.executeCommand('workbench.view.extension.fileExplorer');
             } else {
-                vscode.window.showInformationMessage('No files found with that name.');
+                vscode.window.showInformationMessage('No relevant files found based on your query.');
             }
         }
     });
 
-	let openFileCommand = vscode.commands.registerCommand('fileExplorer.openFile', (filePath: string) => {
-        const uri = vscode.Uri.file(filePath);
-        vscode.window.showTextDocument(uri);
+    let openFileCommand = vscode.commands.registerCommand('fileExplorer.openFile', async (fileUri: vscode.Uri) => {
+        await vscode.window.showTextDocument(fileUri);
     });
     
     context.subscriptions.push(vscode.commands.registerCommand('fileExplorer.sendRepoData', () => {
@@ -86,7 +89,3 @@ async function getUserInput(): Promise<string | undefined> {
     return result;
 }
 
-async function searchFilesByName(fileName: string): Promise<string[]> {
-    return vscode.workspace.findFiles(`**/*${fileName}*`, '**/node_modules/**', 10)
-        .then(files => files.map(file => file.fsPath));
-}
