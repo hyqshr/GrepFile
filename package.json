@@ -18,6 +18,14 @@
       {
         "command": "fileExplorer.initSearch",
         "title": "Search keyword"
+      },
+      {
+        "command": "fileExplorer.askToken",
+        "title": "Filegraber: Enter Github Token and Greptile API Key"
+      },
+      {
+        "command": "fileExplorer.sendRepoData",
+        "title": "Send Repository Data"
       }
     ],
     "keybindings": [
@@ -71,6 +79,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "axios": "^1.6.8",
     "node-fetch": "^3.3.2"
   }
 }
