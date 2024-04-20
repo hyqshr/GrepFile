@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import axios from 'axios';
 import path from 'path';
 import { QueryResponse } from '../types';
-
+import { Readable } from 'stream';
 export async function getRepoInfo() {
     const gitExtension = vscode.extensions.getExtension('vscode.git');
     if (!gitExtension) {
@@ -95,12 +95,10 @@ export async function sendRepositoryData(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage("Failed to send repository data.");
     }
 }
-
 export async function sendQuery(context: vscode.ExtensionContext, messageContent: string): Promise<string[]> {
     try {
         const tokens = await getTokens(context);
         if (!tokens) return [];
-
         return await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: "GrepFile: Sending query...",
@@ -114,34 +112,73 @@ export async function sendQuery(context: vscode.ExtensionContext, messageContent
                 messages: [
                     {
                         id: "some-id-1",
-                        content: "List all files that is about " + messageContent,
+                        content: "List all files that are about " + messageContent,
                         role: "user"
                     }
                 ],
                 repositories: [
                     {
-                        repository: await getRepoInfo(),  // Ensure this function is non-blocking and efficient
+                        repository: await getRepoInfo(),
                         branch: "main"
                     }
                 ],
-                sessionId: "test-session-id"
+                sessionId: "test-session-id",
+                stream: true
             };
 
-            const response = await axios.post<QueryResponse>('https://api.greptile.com/v2/query', payload, {
+            const response = await axios.post('https://api.greptile.com/v2/query', payload, {
                 headers: {
                     'Authorization': `Bearer ${tokens.greptileToken}`,
                     'X-Github-Token': tokens.githubToken,
                     'Content-Type': 'application/json'
-                }
+                },
+                responseType: 'stream'
             });
 
-            if (response.status === 200) {
-                vscode.window.showInformationMessage(response.data.message);
-                return response.data.sources.map(source => source.filepath);
-            } else {
-                vscode.window.showErrorMessage('Failed to get a successful response from the server');
-                return [];
-            }
+            return new Promise<string[]>((resolve, reject) => {
+                const stream: Readable = response.data;
+                let buffer = '';
+
+                stream.on('data', (chunk: Buffer) => {
+                    buffer += chunk.toString();
+                    const parts = buffer.split('\n');
+                    buffer = parts.pop() || '';
+
+                    parts.forEach(part => {
+                        if (part.trim()) {
+                            try {
+                                const json = JSON.parse(part);
+                                //Todo: stream message to message box
+                                if (json.type !== 'sources') {
+                                    console.log("Streamed message:", json.message);
+                                } else if (json.type === 'sources') {
+                                    // Resolve the promise immediately when sources are received
+                                    const filepaths = json.message.map((source: { filepath: any; }) => source.filepath);
+                                    resolve(filepaths);
+                                }
+                            } catch (error) {
+                                console.error('Failed to parse part of the stream:', part);
+                            }
+                        }
+                    });
+                });
+
+                stream.on('end', () => {
+                    console.log("Streaming ended without finding sources.");
+                    resolve([]);  // Resolve with an empty array if no sources are found before the stream ends
+                });
+
+                stream.on('error', (error) => {
+                    console.error('Stream error:', error);
+                    reject([]);
+                });
+
+                token.onCancellationRequested(() => {
+                    stream.destroy();
+                    console.log("Streaming cancelled by the user.");
+                    reject([]);
+                });
+            });
         });
     } catch (error) {
         console.error("Failed to send query:", error);
