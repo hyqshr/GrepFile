@@ -10,6 +10,11 @@
 
 **GrepFile** is a powerful extension for Visual Studio Code that integrates with the Greptile API to enhance your ability to navigate through large codebases quickly. By leveraging a Language Learning Model (LLM) that understands the context of your entire codebase, GrepFile makes finding the right files effortless.
 
+
+
+https://github.com/hyqshr/GrepFile/assets/63976795/df8802ba-e831-4296-90f0-3d9068b003a9
+
+
 ## Features
 
 - **Contextual File Search**: Search for files with precision based on the context of the file
