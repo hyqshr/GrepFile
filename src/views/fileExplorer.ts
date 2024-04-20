@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 
+/**
+ * Provides the necessary methods to populate a Tree View in VSCode with file items.
+ */
 export class FileExplorerProvider implements vscode.TreeDataProvider<FileItem> {
 
     constructor(private files: string[]) {}
@@ -17,6 +20,9 @@ export class FileExplorerProvider implements vscode.TreeDataProvider<FileItem> {
     }
 }
 
+/**
+ * Represents an item in the file tree view, including commands for opening the file.
+ */
 export class FileItem extends vscode.TreeItem {
     public readonly uri: vscode.Uri;
 
