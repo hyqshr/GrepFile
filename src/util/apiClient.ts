@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 import axios from 'axios';
-import path from 'path';
 import { Readable } from 'stream';
 import { Source, StreamResponse } from '../types';
+import { getTokens } from './tokenManagement';
+
 
 export async function getRepoInfo() {
     const gitExtension = vscode.extensions.getExtension('vscode.git');
@@ -30,47 +31,11 @@ export async function getRepoInfo() {
 
     const userRepo = `${match[1]}/${match[2]}`;  // Concatenate to get "user_id/repo_name"
     console.log("User and repository:", userRepo);
+    if (!userRepo) {
+        vscode.window.showErrorMessage('GrepFile: No repository information found.');
+        return;
+    }
     return userRepo;
-}
-
-export async function getTokens(context: vscode.ExtensionContext) {
-    const greptileToken = await context.secrets.get("greptile_api_key");
-    const githubToken = await context.secrets.get("github_token");
-    if (!greptileToken || !githubToken) {
-        vscode.window.showErrorMessage("API tokens are missing.");
-        return null;
-    }
-    return { greptileToken, githubToken };
-}
-
-export async function filterFiles(sources: string[]) {
-    const fileSources = [];
-
-    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
-        console.error("No workspace folders are open.");
-        return [];
-    }
-
-    const workspaceRoot = vscode.workspace.workspaceFolders[0].uri.fsPath; // Typically use the first workspace
-
-    for (const source of sources) {
-        try {
-            // Make sure the path does not start with a slash for proper resolution
-            const normalizedSource = source.startsWith('/') ? source.slice(1) : source;
-            const fullSourcePath = path.join(workspaceRoot, normalizedSource);
-            const uri = vscode.Uri.file(fullSourcePath);
-            const stat = await vscode.workspace.fs.stat(uri);
-
-            if (stat.type === vscode.FileType.File) {
-                console.log("File exists:", uri.fsPath);
-                fileSources.push(uri.fsPath); // Push the absolute path for clarity
-            }
-        } catch (error) {
-            console.error(`Error accessing ${source}: ${error}`);
-        }
-    }
-    console.log("Valid file sources:", fileSources);
-    return fileSources;
 }
 
 export async function sendRepositoryData(context: vscode.ExtensionContext) {
@@ -145,16 +110,14 @@ export async function sendQuery(context: vscode.ExtensionContext, messageContent
     }
 }
 
+/**
+ * Checks if a repository is indexed by the server.
+ * @param context The extension context.
+ */
 export async function checkIfRepoIndexed(context: vscode.ExtensionContext) {
     const repoInfo = await getRepoInfo();
-    if (!repoInfo) {
-        vscode.window.showErrorMessage('No repository information found.');
-        return;
-    }
-    const suffix = encodeURIComponent(`github:main:${repoInfo}`)
-    const apiUrl = `https://api.greptile.com/v2/repositories/${suffix}`;
-    console.log(apiUrl, "Checking repository indexing...")
-    const tokens = await getTokens(context); // Function to retrieve stored tokens
+    const tokens = await getTokens(context);
+    const apiUrl = buildRepositoryApiUrl(repoInfo);
 
     if (!tokens || !tokens.greptileToken) {
         vscode.window.showErrorMessage('Authentication token is missing.');
@@ -168,17 +131,7 @@ export async function checkIfRepoIndexed(context: vscode.ExtensionContext) {
                 'X-Github-Token': tokens.githubToken,
             }
         });
-        console.log('Repository indexing status:', response.data);
-        if (response.status === 200) {
-            vscode.window.showInformationMessage('GrepFile: This repository is indexed.');
-        } else {
-            vscode.window.showInformationMessage('This repository is not indexed.', 'Index Now')
-                .then(selection => {
-                    if (selection === 'Index Now') {
-                        vscode.commands.executeCommand('GrepFile.sendRepoData');
-                    }
-                });
-        }
+        handleIndexingResponse(response);
     } catch (error) {
         vscode.window.showErrorMessage('Failed to check repository indexing: ' + error);
     }
@@ -229,4 +182,31 @@ function processBuffer(buffer: string, resolve: (filePaths: string[]) => void): 
             console.error('Failed to parse part of the stream:', part);
         }
     });
+}
+
+/**
+ * Builds the URL for the repository API endpoint.
+ * @param repositoryInfo Information about the repository.
+ * @returns Formatted URL string.
+ */
+function buildRepositoryApiUrl(repositoryInfo: any): string {
+    return `https://api.greptile.com/v2/repositories/${encodeURIComponent(`github:main:${repositoryInfo}`)}`;
+}
+
+/**
+ * Handles the server response for repository indexing.
+ * @param response Axios response from the server.
+ */
+function handleIndexingResponse(response: any) {
+    console.log('Repository indexing status:', response.data);
+    if (response.status === 200) {
+        vscode.window.showInformationMessage('GrepFile: This repository is indexed.');
+    } else {
+        vscode.window.showInformationMessage('This repository is not indexed.', 'Index Now')
+            .then(selection => {
+                if (selection === 'Index Now') {
+                    vscode.commands.executeCommand('GrepFile.sendRepoData');
+                }
+            });
+    }
 }

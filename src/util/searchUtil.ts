@@ -1,7 +1,8 @@
 // src/searchUtils.ts
 import * as vscode from 'vscode';
-import { filterFiles, sendQuery } from './httpClient';
+import { sendQuery } from './apiClient';
 import { FileExplorerProvider } from '../views/fileExplorer';
+import { filterFiles } from './fileOperations';
 
 /**
  * Prompts the user to provide input for the search.

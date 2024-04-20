@@ -1,6 +1,19 @@
 import * as vscode from 'vscode';
 
 /**
+ * Retrieve the Greptile and GitHub tokens from the user's secrets.
+ */
+export async function getTokens(context: vscode.ExtensionContext) {
+    const greptileToken = await context.secrets.get("greptile_api_key");
+    const githubToken = await context.secrets.get("github_token");
+    if (!greptileToken || !githubToken) {
+        vscode.window.showErrorMessage("API tokens are missing.");
+        return null;
+    }
+    return { greptileToken, githubToken };
+}
+
+/**
  * Prompt vscode input box for user to input tokens.
  */
 async function promptInputToken(secrets: vscode.SecretStorage, secretId: string, promptText: string) {

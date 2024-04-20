@@ -26,6 +26,10 @@
       {
         "command": "GrepFile.sendRepoData",
         "title": "GrepFile: Send Repository Data"
+      },
+      {
+        "command": "GrepFile.checkRepoIndex",
+        "title": "GrepFile: Check Repository Index"
       }
     ],
     "keybindings": [
