@@ -2,6 +2,14 @@ import { Readable } from 'stream';
 import { Source, StreamResponse } from '../../types';
 import * as vscode from 'vscode';
 
+/**
+ * Processes data from a stream and resolves with an array of file paths if sources are received.
+ * The function listens for data events and parses them to extract file paths,
+ * 
+ * @param stream A Readable stream from which data is received.
+ * @param cancellationToken A cancellation token to handle the cancellation of the stream processing.
+ * @returns A promise that resolves to an array of file paths, or rejects with an empty array in case of errors.
+ */
 export function processQueryStream(stream: Readable, cancellationToken: vscode.CancellationToken): Promise<string[]> {
     let buffer = '';
 
@@ -30,7 +38,12 @@ export function processQueryStream(stream: Readable, cancellationToken: vscode.C
     });
 }
 
-// Function to process buffer and resolve based on message type
+/**
+ * Processes buffered data from the stream and extracts source, resolving the promise if sources are found.
+ * 
+ * @param buffer The current string buffer containing the streamed data.
+ * @param resolve The resolve function of the promise, called with the array of file paths if found.
+ */
 export function processBuffer(buffer: string, resolve: (filePaths: string[]) => void): void {
     const parts = buffer.split('\n').filter(part => part.trim());
 
