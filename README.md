@@ -1,14 +1,12 @@
 # GrepFile for Visual Studio Code
 
-Lost in a large codebase? 
+***Feeling overwhelmed by a massive codebase?***
 
-Forget the location of files but remembering what they're about? 
+***Can't recall where that file is, but know what it does?***
 
-Lazy to navigate through the codebase manually? 
+***Prefer to search with human-friendly queries rather than exact text matches?***
 
-Want to search file by more than hard-coded text match?
-
-If so, **GrepFile** is here to help!
+**If so, **GrepFile** is here to help!**
 
 **GrepFile** is a powerful extension for Visual Studio Code that integrates with the Greptile API to enhance your ability to navigate through large codebases quickly. By leveraging a Language Learning Model (LLM) that understands the context of your entire codebase, GrepFile makes finding the right files effortless.
 
@@ -16,9 +14,9 @@ If so, **GrepFile** is here to help!
 
 - **Contextual File Search**: Search for files with precision based on the context of the file
 
-- **Stream Response Handling**: Handle stream response from Greptile API and diliver file sources faster
+- **Stream Response Handling**: Handles streaming responses from the Greptile API and deliver file sources faster.
 
-- **Comprehensive Codebase Context**: Always have full and the latest context of your codebase 
+- **Comprehensive Codebase Context**: Always have the most current and complete context of your codebase.
 
 ## Prerequisites
 
@@ -33,27 +31,30 @@ Follow these steps to set up the GrepFile extension:
 ### Step 1: Upload GitHub and Greptile API Token
 
 1. Open the Command Palette in Visual Studio Code with `Ctrl+Shift+P`.
-2. Type and select `GrepFile: Enter GitHub token and Greptile API key` command.
+2. Search and select `GrepFile: Enter GitHub token and Greptile API key` command.
 3. Enter your GitHub token and Greptile API key as prompted.
 
 ### Step 2: Index Your Repository
 
-If your repository has not been indexed yet, follow these steps to index it:
+If your repository has not been indexed yet, follow these steps:
 
 1. Open the Command Palette with `Ctrl+Shift+P`.
-2. Execute the `GrepFile: Send Repository Data` command to start the indexing process.
+2. Execute the `GrepFile: Send Repository Data` command to start the indexing process. 
+
+Note: Indexing process may take 15-20 minutes the first time the repository is being indexed
 
 ### Step 3: Search for Files
 
-Once the setup is complete, you can begin searching for files:
+Once the setup is complete, you can start searching for files in two easy ways:
 
-1. Open the Command Palette with `Ctrl+Shift+P`. Execute the `GrepFile: Find files` command.
-2. Or, direct type `Shift + Space`
-3. Type the context or the name of the file you are looking for.
+1. Open the Command Palette using `Ctrl+Shift+P` and execute the `GrepFile: Find files` command.
+2. Alternatively, simply press `Shift + Space`.
+
+Then, type the context or the name of the file you're searching for.
 
 ## Commands
 
-- `GrepFile: Enter Github Token and Greptile API Key`: Triggers a prompt to ask for github token and Greptile API key.
+- `GrepFile: Enter Github Token and Greptile API Key`: Triggers a prompt to enter github token and Greptile API key.
 
 - `GrepFile: Find files`: Initiates a search operation based on user input.
 
@@ -65,7 +66,3 @@ Once the setup is complete, you can begin searching for files:
 ## Support
 
 If you encounter any issues or have feedback to improve GrepFile, please open an issue on our GitHub repository.
-
-## Contributing
-
-Contributions to the GrepFile extension are welcome! Please refer to our contribution guidelines on GitHub for more information on how to contribute.
