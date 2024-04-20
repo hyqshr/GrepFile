@@ -1,71 +1,70 @@
-# filegraber README
+# GrepFile for Visual Studio Code
 
-This is the README for your extension "filegraber". After writing up a brief description, we recommend including the following sections.
+Lost in a large codebase? 
+
+Forget the location of files but remembering what they're about? 
+
+Lazy to navigate through the codebase manually? 
+
+Want to search file by more than hard-coded text match?
+
+If so, **GrepFile** is here to help!
+
+**GrepFile** is a powerful extension for Visual Studio Code that integrates with the Greptile API to enhance your ability to navigate through large codebases quickly. By leveraging a Language Learning Model (LLM) that understands the context of your entire codebase, GrepFile makes finding the right files effortless.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- **Fast File Searching**
+- **Easy Repository Indexing**
+- **Seamless Integration**
+- **Context to the whole codebase**
 
-For example if there is an image subfolder under your extension project workspace:
+## Prerequisites
 
-\!\[feature X\]\(images/feature-x.png\)
+Before you begin using GrepFile, ensure that you have the following:
+- Visual Studio Code installed on your computer.
+- Set up Github token and Greptile API token
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## Setup
 
-## Requirements
+Follow these steps to set up the GrepFile extension:
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+### Step 1: Upload GitHub and Greptile API Token
 
-## Extension Settings
+1. Open the Command Palette in Visual Studio Code with `Ctrl+Shift+P`.
+2. Type and select `GrepFile: Enter GitHub token and Greptile API key` command.
+3. Enter your GitHub token and Greptile API key as prompted.
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+### Step 2: Index Your Repository
 
-For example:
+If your repository has not been indexed yet, follow these steps to index it:
 
-This extension contributes the following settings:
+1. Open the Command Palette with `Ctrl+Shift+P`.
+2. Execute the `GrepFile: Send Repository Data` command to start the indexing process.
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+### Step 3: Search for Files
 
-## Known Issues
+Once the setup is complete, you can begin searching for files:
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+1. Open the Command Palette with `Ctrl+Shift+P`.
+2. Execute the `GrepFile: Find files` command.
+3. Type the context or the name of the file you are looking for.
 
-## Release Notes
+## Commands
 
-Users appreciate release notes as you update your extension.
+- `GrepFile: Enter Github Token and Greptile API Key`: Triggers a prompt to ask for github token and Greptile API key.
 
-### 1.0.0
+- `GrepFile: Find files`: Initiates a search operation based on user input.
 
-Initial release of ...
+- `GrepFile: Send Repository Data`: Sends repository data to a configured endpoint.
 
-### 1.0.1
+- `GrepFile: Check Repository Index`: Checks if the repository index is up-to-date or needs refreshing.
 
-Fixed issue #.
 
-### 1.1.0
+## Support
 
-Added features X, Y, and Z.
+If you encounter any issues or have feedback to improve GrepFile, please open an issue on our GitHub repository.
 
----
+## Contributing
 
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Contributions to the GrepFile extension are welcome! Please refer to our contribution guidelines on GitHub for more information on how to contribute.

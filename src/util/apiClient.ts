@@ -6,21 +6,31 @@ import { getRepoInfo } from './gitUtil';
 import { processQueryStream } from './response/queryStreamHandler';
 import { handleIndexingResponse } from './response/indexResponse';
 
+async function getHeaders(context: vscode.ExtensionContext) {
+    const tokens = await getTokens(context);
+    if (!tokens) {
+        throw new Error('Authentication tokens are missing.');
+    }
+    return {
+        'Authorization': `Bearer ${tokens.greptileToken}`,
+        'X-Github-Token': tokens.githubToken,
+        'Content-Type': 'application/json'
+    };
+}
+
 export async function sendRepositoryData(context: vscode.ExtensionContext) {
     try {
-        const tokens = await getTokens(context);
-        if (!tokens) return;
+        const headers = await getHeaders(context);
+        const userRepo = await getRepoInfo();
 
-        const userRepo = await getRepoInfo()
-        const response = await axios.post('https://api.greptile.com/v2/repositories', {
-            remote: "github",
-            repository: userRepo
-        }, {
-            headers: {
-                'Authorization': `Bearer ${tokens.greptileToken}`,
-                'X-Github-Token': tokens.githubToken,
-                'Content-Type': 'application/json'
-            }
+        const response = await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: "GrepFile: Sending repository data...",
+        }, async () => {
+            return axios.post('https://api.greptile.com/v2/repositories', {
+                remote: "github",
+                repository: userRepo
+            }, { headers });
         });
 
         vscode.window.showInformationMessage(response.data.response);
@@ -29,43 +39,28 @@ export async function sendRepositoryData(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage("Failed to send repository data.");
     }
 }
+
 export async function sendQuery(context: vscode.ExtensionContext, messageContent: string): Promise<string[]> {
     try {
-        const tokens = await getTokens(context);
-        if (!tokens) return [];
+        const headers = await getHeaders(context);
         return await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
-            title: "GrepFile: Sending query...",
-            cancellable: true  // Optionally make this operation cancellable
+            title: "Sending query...",
+            cancellable: true
         }, async (progress, token) => {
             token.onCancellationRequested(() => {
                 console.log("User canceled the long running operation");
             });
 
             const payload = {
-                messages: [
-                    {
-                        id: "some-id-1",
-                        content: "List all files that are about " + messageContent,
-                        role: "user"
-                    }
-                ],
-                repositories: [
-                    {
-                        repository: await getRepoInfo(),
-                        branch: "main"
-                    }
-                ],
+                messages: [{ id: "some-id-1", content: "List all files that are about " + messageContent, role: "user" }],
+                repositories: [{ repository: await getRepoInfo(), branch: "main" }],
                 sessionId: "test-session-id",
                 stream: true
             };
 
             const response = await axios.post('https://api.greptile.com/v2/query', payload, {
-                headers: {
-                    'Authorization': `Bearer ${tokens.greptileToken}`,
-                    'X-Github-Token': tokens.githubToken,
-                    'Content-Type': 'application/json'
-                },
+                headers,
                 responseType: 'stream'
             });
 
@@ -73,32 +68,24 @@ export async function sendQuery(context: vscode.ExtensionContext, messageContent
         });
     } catch (error) {
         console.error("Failed to send query:", error);
-        vscode.window.showErrorMessage("Failed to send query.");
+        vscode.window.showErrorMessage("GrepFile: Failed to send query.");
         return [];
     }
 }
 
-/**
- * Checks if a repository is indexed by the server.
- * @param context The extension context.
- */
 export async function checkIfRepoIndexed(context: vscode.ExtensionContext) {
-    const repoInfo = await getRepoInfo();
-    const tokens = await getTokens(context);
-    const apiUrl = buildRepositoryApiUrl(repoInfo);
-
-    if (!tokens || !tokens.greptileToken) {
-        vscode.window.showErrorMessage('Authentication token is missing.');
-        return;
-    }
-
     try {
-        const response = await axios.get(apiUrl, {
-            headers: {
-                'Authorization': `Bearer ${tokens.greptileToken}`,
-                'X-Github-Token': tokens.githubToken,
-            }
+        const headers = await getHeaders(context);
+        const repoInfo = await getRepoInfo();
+        const apiUrl = buildRepositoryApiUrl(repoInfo);
+
+        const response = await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: "GrepFile: Checking if repository is indexed...",
+        }, async () => {
+            return axios.get(apiUrl, { headers });
         });
+
         handleIndexingResponse(response);
     } catch (error) {
         vscode.window.showErrorMessage('Failed to check repository indexing: ' + error);

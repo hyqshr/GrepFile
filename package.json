@@ -17,7 +17,7 @@
     "commands": [
       {
         "command": "GrepFile.initSearch",
-        "title": "GrepFile: Find file"
+        "title": "GrepFile: Find files"
       },
       {
         "command": "GrepFile.askToken",

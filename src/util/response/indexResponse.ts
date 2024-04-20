@@ -9,7 +9,7 @@ export function handleIndexingResponse(response: any) {
     if (response.status === 200) {
         vscode.window.showInformationMessage('GrepFile: This repository is indexed.');
     } else {
-        vscode.window.showInformationMessage('This repository is not indexed.', 'Index Now')
+        vscode.window.showInformationMessage('GrepFile: This repository is not indexed.', 'Index Now')
             .then(selection => {
                 if (selection === 'Index Now') {
                     vscode.commands.executeCommand('GrepFile.sendRepoData');
