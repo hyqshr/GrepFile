@@ -1,10 +1,9 @@
 import * as vscode from 'vscode';
 import axios from 'axios';
 import path from 'path';
-import { QueryResponse } from './types';
+import { QueryResponse } from '../types';
 
 export async function getRepoInfo() {
-
     const gitExtension = vscode.extensions.getExtension('vscode.git');
     if (!gitExtension) {
         vscode.window.showErrorMessage("Git extension is not available.");
@@ -31,6 +30,16 @@ export async function getRepoInfo() {
     const userRepo = `${match[1]}/${match[2]}`;  // Concatenate to get "user_id/repo_name"
     console.log("User and repository:", userRepo);
     return userRepo;
+}
+
+export async function getTokens(context: vscode.ExtensionContext) {
+    const greptileToken = await context.secrets.get("greptile_api_key");
+    const githubToken = await context.secrets.get("github_token");
+    if (!greptileToken || !githubToken) {
+        vscode.window.showErrorMessage("API tokens are missing.");
+        return null;
+    }
+    return { greptileToken, githubToken };
 }
 
 export async function filterFiles(sources: string[]) {
@@ -65,13 +74,8 @@ export async function filterFiles(sources: string[]) {
 
 export async function sendRepositoryData(context: vscode.ExtensionContext) {
     try {
-        const greptileToken = await context.secrets.get("greptile_api_key");
-        const githubToken = await context.secrets.get("github_token");
-
-        if (!greptileToken || !githubToken) {
-            vscode.window.showErrorMessage("API tokens are missing.");
-            return;
-        }
+        const tokens = await getTokens(context);
+        if (!tokens) return;
 
         const userRepo = await getRepoInfo()
         const response = await axios.post('https://api.greptile.com/v2/repositories', {
@@ -79,13 +83,12 @@ export async function sendRepositoryData(context: vscode.ExtensionContext) {
             repository: userRepo
         }, {
             headers: {
-                'Authorization': `Bearer ${greptileToken}`,
-                'X-Github-Token': githubToken,
+                'Authorization': `Bearer ${tokens.greptileToken}`,
+                'X-Github-Token': tokens.githubToken,
                 'Content-Type': 'application/json'
             }
         });
 
-        console.log(response.data);
         vscode.window.showInformationMessage(response.data.response);
     } catch (error) {
         console.error("Failed to send repository data:", error);
@@ -95,13 +98,8 @@ export async function sendRepositoryData(context: vscode.ExtensionContext) {
 
 export async function sendQuery(context: vscode.ExtensionContext, messageContent: string): Promise<string[]> {
     try {
-        const greptileToken = await context.secrets.get("greptile_api_key");
-        const githubToken = await context.secrets.get("github_token");
-
-        if (!greptileToken || !githubToken) {
-            vscode.window.showErrorMessage("API tokens are missing.");
-            return [];
-        }
+        const tokens = await getTokens(context);
+        if (!tokens) return [];
 
         return await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
@@ -131,8 +129,8 @@ export async function sendQuery(context: vscode.ExtensionContext, messageContent
 
             const response = await axios.post<QueryResponse>('https://api.greptile.com/v2/query', payload, {
                 headers: {
-                    'Authorization': `Bearer ${greptileToken}`,
-                    'X-Github-Token': githubToken,
+                    'Authorization': `Bearer ${tokens.greptileToken}`,
+                    'X-Github-Token': tokens.githubToken,
                     'Content-Type': 'application/json'
                 }
             });
