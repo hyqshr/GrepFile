@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import axios from 'axios';
 import path from 'path';
-import { QueryResponse } from '../types';
 import { Readable } from 'stream';
+
 export async function getRepoInfo() {
     const gitExtension = vscode.extensions.getExtension('vscode.git');
     if (!gitExtension) {
@@ -184,5 +184,44 @@ export async function sendQuery(context: vscode.ExtensionContext, messageContent
         console.error("Failed to send query:", error);
         vscode.window.showErrorMessage("Failed to send query.");
         return [];
+    }
+}
+
+export async function checkIfRepoIndexed(context: vscode.ExtensionContext) {
+    const repoInfo = await getRepoInfo();
+    if (!repoInfo) {
+        vscode.window.showErrorMessage('No repository information found.');
+        return;
+    }
+    const suffix = encodeURIComponent(`github:main:${repoInfo}`)
+    const apiUrl = `https://api.greptile.com/v2/repositories/${suffix}`;
+    console.log(apiUrl, "Checking repository indexing...")
+    const tokens = await getTokens(context); // Function to retrieve stored tokens
+
+    if (!tokens || !tokens.greptileToken) {
+        vscode.window.showErrorMessage('Authentication token is missing.');
+        return;
+    }
+
+    try {
+        const response = await axios.get(apiUrl, {
+            headers: {
+                'Authorization': `Bearer ${tokens.greptileToken}`,
+                'X-Github-Token': tokens.githubToken,
+            }
+        });
+        console.log('Repository indexing status:', response.data);
+        if (response.status === 200) {
+            vscode.window.showInformationMessage('GrepFile: This repository is indexed.');
+        } else {
+            vscode.window.showInformationMessage('This repository is not indexed.', 'Index Now')
+                .then(selection => {
+                    if (selection === 'Index Now') {
+                        vscode.commands.executeCommand('GrepFile.sendRepoData');
+                    }
+                });
+        }
+    } catch (error) {
+        vscode.window.showErrorMessage('Failed to check repository indexing: ' + error);
     }
 }
