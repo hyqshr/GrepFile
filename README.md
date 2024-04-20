@@ -14,16 +14,17 @@ If so, **GrepFile** is here to help!
 
 ## Features
 
-- **Fast File Searching**
-- **Easy Repository Indexing**
-- **Seamless Integration**
-- **Context to the whole codebase**
+- **Contextual File Search**: Search for files with precision based on the context of the file
+
+- **Stream Response Handling**: Handle stream response from Greptile API and diliver file sources faster
+
+- **Comprehensive Codebase Context**: Always have full and the latest context of your codebase 
 
 ## Prerequisites
 
 Before you begin using GrepFile, ensure that you have the following:
 - Visual Studio Code installed on your computer.
-- Set up Github token and Greptile API token
+- Set up *Github token* and *Greptile API token*
 
 ## Setup
 
@@ -46,8 +47,8 @@ If your repository has not been indexed yet, follow these steps to index it:
 
 Once the setup is complete, you can begin searching for files:
 
-1. Open the Command Palette with `Ctrl+Shift+P`.
-2. Execute the `GrepFile: Find files` command.
+1. Open the Command Palette with `Ctrl+Shift+P`. Execute the `GrepFile: Find files` command.
+2. Or, direct type `Shift + Space`
 3. Type the context or the name of the file you are looking for.
 
 ## Commands

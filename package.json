@@ -35,8 +35,8 @@
     "keybindings": [
       {
         "command": "GrepFile.initSearch",
-        "key": "shift+f",
-        "mac": "shift+f"
+        "key": "shift+space",
+        "mac": "shift+space"
       }
     ],
     "viewsContainers": {
