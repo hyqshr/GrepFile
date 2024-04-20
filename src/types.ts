@@ -7,7 +7,7 @@ export interface IndexResponse {
     message: string;
 }
 
-interface Source {
+export interface Source {
     repository: string;
     remote: string;
     branch: string;
@@ -15,4 +15,14 @@ interface Source {
     linestart: number | null;
     lineend: number | null;
     summary: string;
+}
+
+export interface RepositoryInfo {
+    repository: string;
+    branch: string;
+}
+
+export interface StreamResponse {
+    type: 'sources' | 'status';
+    message: any;  // This will be dynamic based on the type
 }

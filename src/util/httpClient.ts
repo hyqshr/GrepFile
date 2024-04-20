@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import axios from 'axios';
 import path from 'path';
 import { Readable } from 'stream';
+import { Source, StreamResponse } from '../types';
 
 export async function getRepoInfo() {
     const gitExtension = vscode.extensions.getExtension('vscode.git');
@@ -135,50 +136,7 @@ export async function sendQuery(context: vscode.ExtensionContext, messageContent
                 responseType: 'stream'
             });
 
-            return new Promise<string[]>((resolve, reject) => {
-                const stream: Readable = response.data;
-                let buffer = '';
-
-                stream.on('data', (chunk: Buffer) => {
-                    buffer += chunk.toString();
-                    const parts = buffer.split('\n');
-                    buffer = parts.pop() || '';
-
-                    parts.forEach(part => {
-                        if (part.trim()) {
-                            try {
-                                const json = JSON.parse(part);
-                                //Todo: stream message to message box
-                                if (json.type !== 'sources') {
-                                    console.log("Streamed message:", json.message);
-                                } else if (json.type === 'sources') {
-                                    // Resolve the promise immediately when sources are received
-                                    const filepaths = json.message.map((source: { filepath: any; }) => source.filepath);
-                                    resolve(filepaths);
-                                }
-                            } catch (error) {
-                                console.error('Failed to parse part of the stream:', part);
-                            }
-                        }
-                    });
-                });
-
-                stream.on('end', () => {
-                    console.log("Streaming ended without finding sources.");
-                    resolve([]);  // Resolve with an empty array if no sources are found before the stream ends
-                });
-
-                stream.on('error', (error) => {
-                    console.error('Stream error:', error);
-                    reject([]);
-                });
-
-                token.onCancellationRequested(() => {
-                    stream.destroy();
-                    console.log("Streaming cancelled by the user.");
-                    reject([]);
-                });
-            });
+            return processStream(response.data, token);
         });
     } catch (error) {
         console.error("Failed to send query:", error);
@@ -224,4 +182,51 @@ export async function checkIfRepoIndexed(context: vscode.ExtensionContext) {
     } catch (error) {
         vscode.window.showErrorMessage('Failed to check repository indexing: ' + error);
     }
+}
+
+function processStream(stream: Readable, cancellationToken: vscode.CancellationToken): Promise<string[]> {
+    let buffer = '';
+
+    return new Promise<string[]>((resolve, reject) => {
+        stream.on('data', (chunk: Buffer) => {
+            buffer += chunk.toString();
+            processBuffer(buffer, resolve);
+            buffer = buffer.substring(buffer.lastIndexOf('\n') + 1);
+        });
+
+        stream.on('end', () => {
+            console.log("Streaming ended without finding sources.");
+            resolve([]);  // No sources found
+        });
+
+        stream.on('error', (error: Error) => {
+            console.error('Stream error:', error);
+            reject([]);
+        });
+
+        cancellationToken.onCancellationRequested(() => {
+            stream.destroy();
+            console.log("Streaming cancelled by the user.");
+            reject([]);
+        });
+    });
+}
+
+// Function to process buffer and resolve based on message type
+function processBuffer(buffer: string, resolve: (filePaths: string[]) => void): void {
+    const parts = buffer.split('\n').filter(part => part.trim());
+
+    parts.forEach(part => {
+        try {
+            const json: StreamResponse = JSON.parse(part);
+            if (json.type === 'sources') {
+                const filepaths = (json.message as Source[]).map(source => source.filepath);
+                resolve(filepaths);  // Resolve promise with file paths
+            } else {
+                console.log("Streamed message:", json.message);
+            }
+        } catch (error) {
+            console.error('Failed to parse part of the stream:', part);
+        }
+    });
 }

@@ -7,9 +7,6 @@ import { initSearch } from './util/searchUtil';
 import { openFile } from './util/fileOperations';
 
 export function activate(context: vscode.ExtensionContext) {
-    // Immediately check if the repository is indexed upon activation.
-    checkIfRepoIndexed(context);
-
     // Command for user to input their greptile key and github token.
     let AskTokenCommand = vscode.commands.registerCommand(
         Commands.AskToken, () => handleTokenCommands(context)
