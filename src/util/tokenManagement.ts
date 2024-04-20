@@ -28,9 +28,9 @@ async function promptInputToken(secrets: vscode.SecretStorage, secretId: string,
 
     if (token) {
         await secrets.store(secretId, token);
-        vscode.window.showInformationMessage(`${promptText} token stored successfully!`);
+        vscode.window.showInformationMessage(`GrepFile: ${promptText} token stored successfully!`);
     } else {
-        vscode.window.showInformationMessage(`${promptText} token is required!`);
+        vscode.window.showInformationMessage(`GrepFile: ${promptText} token is required!`);
         return null;
     }
 
@@ -38,7 +38,7 @@ async function promptInputToken(secrets: vscode.SecretStorage, secretId: string,
 }
 
 /**
- * Handle the command to prompt the user to input both their Greptile and GitHub tokens.
+ * Command to prompt the user to input both their Greptile and GitHub tokens.
  */
 export async function handleTokenCommands(context: vscode.ExtensionContext) {
     const { secrets } = context;

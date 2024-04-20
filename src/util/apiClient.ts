@@ -1,42 +1,10 @@
 import * as vscode from 'vscode';
 import axios from 'axios';
-import { Readable } from 'stream';
-import { Source, StreamResponse } from '../types';
+
 import { getTokens } from './tokenManagement';
-
-
-export async function getRepoInfo() {
-    const gitExtension = vscode.extensions.getExtension('vscode.git');
-    if (!gitExtension) {
-        vscode.window.showErrorMessage("Git extension is not available.");
-        return;
-    }
-    const api = gitExtension.exports.getAPI(1);
-    const repo = api.repositories[0];  // Assuming the first repository
-
-    // Parse repository information
-    const remote = await repo.getConfig('remote.origin.url');
-    if (!remote) {
-        vscode.window.showErrorMessage("No remote origin found.");
-        return;
-    }
-
-    // Parse the user and repository from the GitHub URL
-    const regex = /github\.com[\/:](.+?)\/(.+?)\.git$/;
-    const match = remote.match(regex);
-    if (!match) {
-        vscode.window.showErrorMessage("Failed to parse repository URL.");
-        return;
-    }
-
-    const userRepo = `${match[1]}/${match[2]}`;  // Concatenate to get "user_id/repo_name"
-    console.log("User and repository:", userRepo);
-    if (!userRepo) {
-        vscode.window.showErrorMessage('GrepFile: No repository information found.');
-        return;
-    }
-    return userRepo;
-}
+import { getRepoInfo } from './gitUtil';
+import { processQueryStream } from './response/queryStreamHandler';
+import { handleIndexingResponse } from './response/indexResponse';
 
 export async function sendRepositoryData(context: vscode.ExtensionContext) {
     try {
@@ -101,7 +69,7 @@ export async function sendQuery(context: vscode.ExtensionContext, messageContent
                 responseType: 'stream'
             });
 
-            return processStream(response.data, token);
+            return processQueryStream(response.data, token);
         });
     } catch (error) {
         console.error("Failed to send query:", error);
@@ -137,53 +105,6 @@ export async function checkIfRepoIndexed(context: vscode.ExtensionContext) {
     }
 }
 
-function processStream(stream: Readable, cancellationToken: vscode.CancellationToken): Promise<string[]> {
-    let buffer = '';
-
-    return new Promise<string[]>((resolve, reject) => {
-        stream.on('data', (chunk: Buffer) => {
-            buffer += chunk.toString();
-            processBuffer(buffer, resolve);
-            buffer = buffer.substring(buffer.lastIndexOf('\n') + 1);
-        });
-
-        stream.on('end', () => {
-            console.log("Streaming ended without finding sources.");
-            resolve([]);  // No sources found
-        });
-
-        stream.on('error', (error: Error) => {
-            console.error('Stream error:', error);
-            reject([]);
-        });
-
-        cancellationToken.onCancellationRequested(() => {
-            stream.destroy();
-            console.log("Streaming cancelled by the user.");
-            reject([]);
-        });
-    });
-}
-
-// Function to process buffer and resolve based on message type
-function processBuffer(buffer: string, resolve: (filePaths: string[]) => void): void {
-    const parts = buffer.split('\n').filter(part => part.trim());
-
-    parts.forEach(part => {
-        try {
-            const json: StreamResponse = JSON.parse(part);
-            if (json.type === 'sources') {
-                const filepaths = (json.message as Source[]).map(source => source.filepath);
-                resolve(filepaths);  // Resolve promise with file paths
-            } else {
-                console.log("Streamed message:", json.message);
-            }
-        } catch (error) {
-            console.error('Failed to parse part of the stream:', part);
-        }
-    });
-}
-
 /**
  * Builds the URL for the repository API endpoint.
  * @param repositoryInfo Information about the repository.
@@ -191,22 +112,4 @@ function processBuffer(buffer: string, resolve: (filePaths: string[]) => void): 
  */
 function buildRepositoryApiUrl(repositoryInfo: any): string {
     return `https://api.greptile.com/v2/repositories/${encodeURIComponent(`github:main:${repositoryInfo}`)}`;
-}
-
-/**
- * Handles the server response for repository indexing.
- * @param response Axios response from the server.
- */
-function handleIndexingResponse(response: any) {
-    console.log('Repository indexing status:', response.data);
-    if (response.status === 200) {
-        vscode.window.showInformationMessage('GrepFile: This repository is indexed.');
-    } else {
-        vscode.window.showInformationMessage('This repository is not indexed.', 'Index Now')
-            .then(selection => {
-                if (selection === 'Index Now') {
-                    vscode.commands.executeCommand('GrepFile.sendRepoData');
-                }
-            });
-    }
 }
