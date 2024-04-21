@@ -28,6 +28,8 @@ async function initSearch(context: vscode.ExtensionContext) {
     if (userInput) {
         const sources = await sendQuery(context, userInput);
         const filepaths = await filterFiles(sources);
+        
+        // After filter out the folder, we can display the file list in the tree view.
         if (filepaths && filepaths.length > 0) {
             const fileExplorerProvider = new FileExplorerProvider(filepaths);
             vscode.window.registerTreeDataProvider('fileList', fileExplorerProvider);

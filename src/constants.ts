@@ -20,3 +20,10 @@ export const Commands = {
     SendRepoData: 'GrepFile.sendRepoData',
     CheckRepoIndex: 'GrepFile.checkRepoIndex'
 };
+
+// Constants used throughout the VSCode extension
+export const CONSTANTS = {
+    GREPTILE_KEY: "Greptile API Key",
+    GITHUB_KEY: "GitHub Token",
+    MISSING_TOKENS_MESSAGE: "API tokens are missing."
+};

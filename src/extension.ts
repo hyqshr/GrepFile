@@ -2,7 +2,7 @@
 import * as vscode from 'vscode';
 import { checkIfRepoIndexed, sendRepositoryData } from './util/apiClient';
 import { handleTokenCommands } from './util/tokenManagement';
-import { Commands } from './commands';
+import { Commands } from './constants';
 import { initSearch } from './util/searchUtil';
 import { openFile } from './util/fileOperations';
 

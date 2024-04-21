@@ -1,13 +1,14 @@
 import * as vscode from 'vscode';
+import { CONSTANTS } from '../constants';
 
 /**
  * Retrieve the Greptile and GitHub tokens from the user's secrets.
  */
 export async function getTokens(context: vscode.ExtensionContext) {
-    const greptileToken = await context.secrets.get("greptile_api_key");
-    const githubToken = await context.secrets.get("github_token");
+    const greptileToken = await context.secrets.get(CONSTANTS.GREPTILE_KEY);
+    const githubToken = await context.secrets.get(CONSTANTS.GITHUB_KEY);
     if (!greptileToken || !githubToken) {
-        vscode.window.showErrorMessage("API tokens are missing.");
+        vscode.window.showErrorMessage(CONSTANTS.MISSING_TOKENS_MESSAGE);
         return null;
     }
     return { greptileToken, githubToken };
@@ -16,21 +17,21 @@ export async function getTokens(context: vscode.ExtensionContext) {
 /**
  * Prompt vscode input box for user to input tokens.
  */
-async function promptInputToken(secrets: vscode.SecretStorage, secretId: string, promptText: string) {
+async function promptInputToken(secrets: vscode.SecretStorage, secretId: string) {
     let token = await secrets.get(secretId);
 
     token = await vscode.window.showInputBox({
-        placeHolder: `Enter your ${promptText} token`,
+        placeHolder: `Enter your ${secretId}`,
         password: true,
-        prompt: `Please enter your ${promptText} token to continue`,
+        prompt: `Please enter your ${secretId} to continue`,
         ignoreFocusOut: true
     });
 
     if (token) {
         await secrets.store(secretId, token);
-        vscode.window.showInformationMessage(`GrepFile: ${promptText} token stored successfully!`);
+        vscode.window.showInformationMessage(`GrepFile: ${secretId} stored successfully!`);
     } else {
-        vscode.window.showInformationMessage(`GrepFile: ${promptText} token is required!`);
+        vscode.window.showInformationMessage(`GrepFile: ${secretId} is required!`);
         return null;
     }
 
@@ -42,8 +43,8 @@ async function promptInputToken(secrets: vscode.SecretStorage, secretId: string,
  */
 export async function handleTokenCommands(context: vscode.ExtensionContext) {
     const { secrets } = context;
-    const greptileToken = await promptInputToken(secrets, 'greptile_api_key', 'Greptile API');
-    const githubToken = await promptInputToken(secrets, 'github_token', 'GitHub');
+    const greptileToken = await promptInputToken(secrets, CONSTANTS.GREPTILE_KEY);
+    const githubToken = await promptInputToken(secrets, CONSTANTS.GITHUB_KEY);
 
     if (greptileToken && githubToken) {
         console.log('Tokens retrieved successfully.');
