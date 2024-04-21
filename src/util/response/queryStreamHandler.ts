@@ -54,6 +54,7 @@ export function processBuffer(buffer: string, resolve: (filePaths: string[]) => 
                 const filepaths = (json.message as Source[]).map(source => source.filepath);
                 resolve(filepaths);  // Resolve promise with file paths
             } else {
+                // TODO: Handle other types of messages from stream
                 console.log("Streamed message:", json.message);
             }
         } catch (error) {

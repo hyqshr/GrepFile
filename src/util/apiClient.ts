@@ -15,7 +15,7 @@ import { CONSTANTS } from '../constants';
  * @returns {Promise<Object>} A promise that resolves to an object containing HTTP headers.
  * @throws {Error} Throws an error if authentication tokens are missing.
  */
-async function getHeaders(context: vscode.ExtensionContext) {
+async function getHeaders(context: vscode.ExtensionContext): Promise<object> {
     const tokens = await getTokens(context);
     if (!tokens) {
         throw new Error(CONSTANTS.ERRORS.TOKENS_MISSING);
@@ -34,7 +34,7 @@ async function getHeaders(context: vscode.ExtensionContext) {
  * @param {vscode.ExtensionContext} context - The extension context.
  * @returns {Promise<void>} A promise that resolves when the data is sent, or an error is shown.
  */
-export async function sendRepositoryData(context: vscode.ExtensionContext) {
+export async function sendRepositoryData(context: vscode.ExtensionContext): Promise<void> {
     try {
         const headers = await getHeaders(context);
         const userRepo = await getRepoInfo();
@@ -100,7 +100,7 @@ export async function sendQuery(context: vscode.ExtensionContext, messageContent
  * @param {vscode.ExtensionContext} context - The extension context.
  * @returns {Promise<void>} A promise that resolves when the check is complete or an error occurs.
  */
-export async function checkIfRepoIndexed(context: vscode.ExtensionContext) {
+export async function checkIfRepoIndexed(context: vscode.ExtensionContext): Promise<void> {
     try {
         const headers = await getHeaders(context);
         const repoInfo = await getRepoInfo();
