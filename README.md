@@ -30,6 +30,7 @@ Before you begin using GrepFile, ensure that you have the following:
 - Set up *Github token* and *Greptile API token*
 
 ## Setup
+If you want to run this project locally, navigate to `extention.ts` and press `F5`.
 
 Follow these steps to set up the GrepFile extension:
 

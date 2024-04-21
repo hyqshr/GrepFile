@@ -3,6 +3,8 @@
   "displayName": "GrepFile",
   "description": "VSCode file finder powered by Greptile. Never get lost in large codebase",
   "version": "0.0.1",
+  "publisher": "YiqiuHuang",
+  "logo": "images/logo.png",
   "engines": {
     "vscode": "^1.88.0"
   },
@@ -67,6 +69,10 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "vscode-test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hyqshr/GrepFile"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
