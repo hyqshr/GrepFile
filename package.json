@@ -2,7 +2,7 @@
   "name": "grepfile",
   "displayName": "GrepFile",
   "description": "VSCode file finder powered by Greptile. Never get lost in large codebase",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "YiqiuHuang",
   "icon": "images/logo.png",
   "engines": {
@@ -46,7 +46,7 @@
         {
           "id": "fileExplorer",
           "title": "GrepFile",
-          "icon": "images/app-bar-logo.png"
+          "icon": "images/activity-bar-logo.png"
         }
       ]
     },
