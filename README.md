@@ -16,7 +16,9 @@
 https://marketplace.visualstudio.com/items?itemName=YiqiuHuang.grepfile
 
 
-Uploading demo(1).mp4…
+
+https://github.com/hyqshr/GrepFile/assets/63976795/a6b465ce-dff2-4871-999f-aad31233bcd4
+
 
 
 
